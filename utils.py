@@ -58,3 +58,33 @@ def save_pickle(data, path):
 
     with open(path, 'wb') as f:
         pickle.dump(data, f)
+
+def read_txt(path):
+    with open(path, 'r') as f:
+        data = f.read()
+    return data
+
+def write_txt(data, path):
+    with open(path, 'w') as f:
+        f.write(data)
+
+def load_yaml(path):
+    import yaml
+    with open(path) as f:
+        data = yaml.safe_load(f)
+    return data
+
+def load_config(path):
+    with open(path) as f:
+        config = yaml.safe_load(f)
+        config = Config(**config)
+    return config
+
+
+def save_wav(data, path, sr):
+    import soundfile as sf
+    sf.write(path, data, sr, "PCM_24")
+
+def song_prompt_to_name(song_prompt):
+    # capitalize every word, remove punctuation marks and join with underscores
+    return "_".join([word.capitalize() for word in song_prompt.replace(",", "").replace(".", "").split(" ")])
