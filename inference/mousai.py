@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
         # if the output dir does not exist, create it
         if not os.path.exists(args.output_dir):
-            os.mkdir(args.output_dir)
+            os.makedirs(args.output_dir)
 
         save_file_name =  song_prompt_to_name(prompt)
 
