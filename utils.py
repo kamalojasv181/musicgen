@@ -75,6 +75,7 @@ def load_yaml(path):
     return data
 
 def load_config(path):
+    import yaml
     with open(path) as f:
         config = yaml.safe_load(f)
         config = Config(**config)
