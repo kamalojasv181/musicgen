@@ -100,14 +100,14 @@ if __name__ == "__main__":
         sample_cpu = sample.cpu().numpy()
 
         # if the output dir does not exist, create it
-        if not os.path.exists(config.output_dir):
-            os.mkdir(config.output_dir)
+        if not os.path.exists(args.output_dir):
+            os.mkdir(args.output_dir)
 
         save_file_name =  song_prompt_to_name(prompt)
 
         # save the audio
-        save_wav(sample_cpu, os.path.join(config.output_dir, save_file_name + ".wav"), config.sr)
+        save_wav(sample_cpu, os.path.join(args.output_dir, save_file_name + ".wav"), config.sr)
 
         # update the cache
-        update_cache(prompt, config.output_dir)
+        update_cache(prompt, args.output_dir)
 
