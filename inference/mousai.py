@@ -5,8 +5,57 @@ import yaml
 import os
 import torch
 import sys
+import shutil
 
 sys.path.append("../")
+
+
+def check_output_in_cache(prompt, output_dir):
+    """
+    Checks if the output is already in the cache
+    """
+    # check if the cache exists
+    if not os.path.exists("./cache"):
+        return False
+
+    # check if the prompt is in ./cache/mousai.json
+    mousai_cache = load_json("./cache/mousai.json")
+
+    if prompt in mousai_cache:
+        file_path = mousai_cache[prompt]
+
+        # check if the file exists
+        if os.path.exists(file_path) and file_path == os.path.join(output_dir, song_prompt_to_name(prompt) + ".wav"):
+            return True
+
+        elif os.path.exists(file_path):
+            # copy the file to the output dir
+            shutil.copy(file_path, os.path.join(output_dir, song_prompt_to_name(prompt) + ".wav"))
+            return True
+
+        else:
+            return False
+
+    else:
+        return False
+
+
+def update_cache(prompt, output_dir):
+    """
+    Updates the cache
+    """
+    # check if the cache exists
+    if not os.path.exists("./cache"):
+        os.mkdir("./cache")
+
+    # check if the prompt is in ./cache/mousai.json
+    mousai_cache = load_json("./cache/mousai.json")
+
+    if prompt not in mousai_cache:
+        mousai_cache[prompt] = os.path.join(output_dir, song_prompt_to_name(prompt) + ".wav")
+
+    save_json(mousai_cache, "./cache/mousai.json")
+
 
 
 if __name__ == "__main__":
@@ -58,7 +107,7 @@ if __name__ == "__main__":
 
         # save the audio
         save_wav(sample_cpu, os.path.join(config.output_dir, save_file_name + ".wav"), config.sr)
- 
 
-
+        # update the cache
+        update_cache(prompt, config.output_dir)
 
