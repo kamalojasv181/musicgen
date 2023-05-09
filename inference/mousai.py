@@ -1,6 +1,5 @@
 import argparse
 from transformers import AutoModel
-from utils import *
 import yaml
 import os
 import torch
@@ -9,6 +8,7 @@ import shutil
 
 sys.path.append("../")
 
+from utils import *
 
 def check_output_in_cache(prompt, output_dir):
     """
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     
 
     # load the model
-    model = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, use_auth_token=access_token).to(device)
+    model = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, use_auth_token= os.environ["HUGGINGFACE_TOKEN"]).to(device)
 
     # load the prompts
     prompts = read_txt(args.text_prompts).split('\n')
