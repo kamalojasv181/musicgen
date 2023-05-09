@@ -1,3 +1,4 @@
 prompts/
 output/
 __pycache__/
+inference/cache/

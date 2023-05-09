@@ -5,6 +5,7 @@ import os
 import torch
 import sys
 import shutil
+import numpy as np
 
 sys.path.append("../")
 
@@ -48,6 +49,10 @@ def update_cache(prompt, output_dir):
     if not os.path.exists("./cache"):
         os.mkdir("./cache")
 
+    if not os.path.exists("./cache/mousai.json"):
+        with open("./cache/mousai.json", "w") as f:
+            f.write("{}")
+
     # check if the prompt is in ./cache/mousai.json
     mousai_cache = load_json("./cache/mousai.json")
 
@@ -62,14 +67,29 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", type=str, default='mousai.yaml')
     parser.add_argument("--text_prompts", type=str, default='../prompts/electronic.txt')
-    parser.add_argument("--output_dir", type=str, default='../output/mousai')
+    parser.add_argument("--output_dir", type=str, default='../output_1/mousai')
     args = parser.parse_args()
+
+    # if the output dir does not exist, create it
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
 
     # load the config
     config = load_config(args.config_path)
 
     # set seed
     set_seed(config.seed)
+
+    # load the prompts
+    prompts = read_txt(args.text_prompts).split('\n')
+
+    # filter the prompts
+    prompts = [prompt for prompt in prompts if not check_output_in_cache(prompt, args.output_dir)]
+
+    # if there are no prompts, exit
+    if len(prompts) == 0:
+        print("All prompts are in the cache")
+        exit()
 
     # get the device
     if config.device == "cuda" and torch.cuda.is_available():
@@ -81,9 +101,6 @@ if __name__ == "__main__":
 
     # load the model
     model = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, use_auth_token= os.environ["HUGGINGFACE_TOKEN"]).to(device)
-
-    # load the prompts
-    prompts = read_txt(args.text_prompts).split('\n')
 
     # generate the audios
     samples, info = model.sample(
@@ -99,9 +116,8 @@ if __name__ == "__main__":
     for i, (sample, prompt) in enumerate(zip(samples, info["text"])):
         sample_cpu = sample.cpu().numpy()
 
-        # if the output dir does not exist, create it
-        if not os.path.exists(args.output_dir):
-            os.makedirs(args.output_dir)
+        # transpose the sample
+        sample_cpu = np.transpose(sample_cpu)
 
         save_file_name =  song_prompt_to_name(prompt)
 
