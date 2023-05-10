@@ -2,3 +2,5 @@ prompts/
 output/
 __pycache__/
 inference/cache/
+data/
+test.ipynb

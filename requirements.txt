@@ -4,3 +4,5 @@ archisound==0.0.6
 audio-diffusion-pytorch==0.1.3
 PyYAML==6.0
 soundfile==0.12.1
+frechet_audio_distance==0.1.0
+torchlibrosa==0.1.0
