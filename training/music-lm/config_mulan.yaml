@@ -13,6 +13,13 @@ text_transformer:
   heads: 4
   dim_head: 64
 
+wandb:
+  project: "mousai"
+  path: "./output/music-lm/mulan"
+  run_name: "mulan-train"
+  job_type: "music-lm"
+  mode: "online"
+
 device: cuda
 lr: 0.0001
 batch_size: 4
@@ -20,5 +27,5 @@ patience: 5
 max_epochs: 100
 max_iters: 10
 iters_before_eval: 2
-save_path: "./mulan.pt"
 dataset_path: "../../sample_data_hf"
+seed: 42

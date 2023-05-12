@@ -4,12 +4,28 @@ from datasets import load_dataset, load_from_disk
 import argparse
 import copy
 import sys
+import wandb
+import yaml
 sys.path.append('../../')
 
 from utils import *
 
 
 def main(config):
+
+    if config.wandb.mode == "offline":
+        os.environ["WANDB_MODE"] = "offline"
+
+    if not os.path.exists(config.wandb.path):
+        os.makedirs(config.wandb.path)
+
+    wandb.init(project=config.wandb.project, name = config.wandb.run_name, entity = os.environ["WANDB_ENTITY"], dir = config.wandb.path, job_type = config.wandb.job_type)
+
+    with open(os.path.join(wandb.run.dir, "config_process.yaml"), "w") as f:
+        yaml.dump(config.__dict__, f)
+
+    # set seed
+    set_seed(config.seed)
 
     # create audio_transformer object
     audio_transformer = AudioSpectrogramTransformer(
@@ -96,6 +112,7 @@ def main(config):
 
             # print loss
             print(f'Running Training Loss: {loss.item()}')
+            wandb.log({'Running Training Loss': loss.item()})
 
             # append loss to list
             training_loss_list.append(loss.item())
@@ -133,7 +150,10 @@ def main(config):
                 test_loss /= len(test_loader)
 
                 print(f'Averaged Test Loss: {test_loss}')
+                wandb.log({'Averaged Test Loss': test_loss})
+
                 print(f'Averaged Training Loss: {sum(training_loss_list) / len(training_loss_list)}')
+                wandb.log({'Averaged Training Loss': sum(training_loss_list) / len(training_loss_list)})
 
                 # append test loss to list
                 test_loss_list.append(test_loss)
@@ -152,7 +172,7 @@ def main(config):
                     best_iter = total_iters
 
                     # save best model
-                    torch.save(best_model, config.save_path)
+                    torch.save(best_model, os.path.join(wandb.run.dir, 'best_model.pt'))
 
                 # do early stopping
                 if epoch > 1 and test_loss_list[-1] > test_loss_list[-2]:
@@ -167,8 +187,15 @@ def main(config):
 
 
     print(f'Best Test Loss: {best_test_loss}')
-                
+    print(f'Best Epoch: {best_epoch}')
+    print(f'Best Iter: {best_iter}')
 
+    table = wandb.Table(
+        columns=["Test Loss", "Epoch", "Iteration"],
+        data=[[best_test_loss, best_epoch, best_iter]]
+    )
+
+    wandb.log({"Best Model": table})
 
 
 if __name__ == '__main__':
