@@ -1,6 +1,6 @@
 import torch
 from musiclm_pytorch import MuLaN, AudioSpectrogramTransformer, TextTransformer
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 import argparse
 import copy
 import sys
@@ -30,26 +30,22 @@ def main(config):
         dim_head=config.text_transformer.dim_head
     )
 
-    mulan = MuLaN(
+    model = MuLaN(
         audio_transformer = audio_transformer,
         text_transformer = text_transformer
     )
 
-    # put mulan on device
-    mulan = mulan.to(config.device)
+    # put model on device
+    model = model.to(config.device)
 
     # create optimizer
-    optimizer = torch.optim.Adam(mulan.parameters(), lr=config.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
 
-    # get a ton of <sound, text> pairs and train
-    train_dataset = load_dataset(config.text_audio_pairs_train)
-
-    # test dataset
-    test_dataset = load_dataset(config.text_audio_pairs_test)
+    dataset = load_from_disk(config.dataset_path)
 
     # make a dataloader
-    train_dataloader = torch.utils.data.DataLoader(dataset, batch_size=config.batch_size, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(dataset, batch_size=config.batch_size, shuffle=True)
+    train_dataloader = torch.utils.data.DataLoader(dataset["train"], batch_size=config.batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(dataset["test"], batch_size=config.batch_size, shuffle=True)
 
     best_test_loss = float('inf')
     best_model = None
@@ -66,7 +62,7 @@ def main(config):
     total_iters = 0
 
     print(' Starting Training ....')
-    for epoch in range(config.epochs):
+    for epoch in range(config.max_epochs):
 
         if patience == 0 or total_iters > config.max_iters:
             break
@@ -74,15 +70,20 @@ def main(config):
         model.train()
 
         # train
-        for batch_idx, batch in enumerate(dataloader):
+        for batch_idx, batch in enumerate(train_dataloader):
 
-            texts, audios = batch['text'], batch['audio']
+            texts, audios = batch['name'], batch['audio']
 
             # put audios on device
             audios = audios.to(config.device)
+            texts = texts.to(config.device)
+
+            # squeeze audios and texts
+            audios = audios.squeeze(1)
+            texts = texts.squeeze(1)
 
             # do forward pass
-            loss = mulan(wavs=audios, raw_texts=texts)
+            loss = model(wavs=audios, texts=texts)
 
             # do backward pass
             loss.backward()
@@ -106,6 +107,8 @@ def main(config):
 
             if iters_before_eval == 0:
 
+                print('Evaluating ...')
+
                 # evaluate on test set
                 model.eval()
 
@@ -113,13 +116,17 @@ def main(config):
 
                 for batch_idx, batch in enumerate(test_loader):
 
-                    texts, audios = batch['text'], batch['audio']
+                    texts, audios = batch['name'], batch['audio']
 
                     # put audios on device
                     audios = audios.to(config.device)
+                    texts = texts.to(config.device)
+
+                    audios = audios.squeeze(1)
+                    texts = texts.squeeze(1)
 
                     # do forward pass
-                    loss = mulan(wavs=audios, raw_texts=texts)
+                    loss = model(wavs=audios, texts=texts)
 
                     test_loss += loss.item()
 
@@ -140,7 +147,7 @@ def main(config):
                 if test_loss < best_test_loss:
                         
                     best_test_loss = test_loss
-                    best_model = copy.deepcopy(mulan)
+                    best_model = copy.deepcopy(model)
                     best_epoch = epoch
                     best_iter = total_iters
 

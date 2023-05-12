@@ -4,5 +4,7 @@ __pycache__/
 inference/cache/
 data/
 test.ipynb
-sample_dataset/
+sample_data/
 sample_data_hf/
+data_1/
+music_data_2.zip

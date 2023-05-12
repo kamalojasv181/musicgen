@@ -3,18 +3,27 @@ import json
 import argparse
 from datasets import load_dataset
 import torch
+from x_clip.tokenizer import tokenizer
 
-def make_all_same_length(batch, max_length=96000):
+def make_all_same_length(batch, max_length=16000):
     batch["audio"]["array"] = batch["audio"]["array"][:max_length]
+    return batch
+
+def encode_text(batch):
+    batch["name"] = tokenizer.tokenize(batch["name"])
+    return batch
+
+def remove_path(batch):
+    batch["audio"] = batch["audio"]["array"]
     return batch
 
 if __name__=='__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='data', help='data directory')
+    parser.add_argument('--data_dir', type=str, default='sample_data', help='data directory')
     parser.add_argument('--test_size', type=float, default=0.25, help='test size')
-    parser.add_argument('--output_dir', type=str, default='data_hf', help='processed huggingface data directory')
-    parser.add_argument('--max_length', type=int, default=96000, help='max length of audio')
+    parser.add_argument('--output_dir', type=str, default='sample_data_hf', help='processed huggingface data directory')
+    parser.add_argument('--max_length', type=int, default=16000, help='max length of audio')
 
 
     args = parser.parse_args()
@@ -40,9 +49,13 @@ if __name__=='__main__':
 
     data = load_dataset('audiofolder', data_dir=data_dir)
 
-    data = data.map(make_all_same_length, args.max_length)
+    data = data.map(make_all_same_length)
+
+    data = data.map(encode_text)
 
     data = data["train"].train_test_split(test_size=0.25)
+
+    data = data.map(remove_path)
 
     data = data.with_format("torch")
 

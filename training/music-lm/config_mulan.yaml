@@ -7,7 +7,7 @@ audio_transformer:
   spec_win_length: 24
   spec_aug_stretch_factor: 0.8
 
-text_transfomer: 
+text_transformer: 
   dim: 512
   depth: 3
   heads: 4
@@ -20,4 +20,5 @@ patience: 5
 max_epochs: 100
 max_iters: 10
 iters_before_eval: 2
-save_path: "./checkpoint"
+save_path: "./mulan.pt"
+dataset_path: "../../sample_data_hf"
