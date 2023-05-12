@@ -7,3 +7,4 @@ soundfile==0.12.1
 frechet_audio_distance==0.1.0
 torchlibrosa==0.1.0
 laion-clap==1.1.4
+datasets==2.12.0
