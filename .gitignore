@@ -4,3 +4,5 @@ __pycache__/
 inference/cache/
 data/
 test.ipynb
+sample_dataset/
+sample_data_hf/

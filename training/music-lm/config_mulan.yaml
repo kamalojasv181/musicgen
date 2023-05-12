@@ -1,0 +1,23 @@
+audio_transformer:
+  dim: 512
+  depth: 3
+  heads: 4
+  dim_head: 64
+  spec_n_fft: 128
+  spec_win_length: 24
+  spec_aug_stretch_factor: 0.8
+
+text_transfomer: 
+  dim: 512
+  depth: 3
+  heads: 4
+  dim_head: 64
+
+device: cuda
+lr: 0.0001
+batch_size: 4
+patience: 5
+max_epochs: 100
+max_iters: 10
+iters_before_eval: 2
+save_path: "./checkpoint"

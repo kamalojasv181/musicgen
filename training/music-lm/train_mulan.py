@@ -42,10 +42,10 @@ def main(config):
     optimizer = torch.optim.Adam(mulan.parameters(), lr=config.lr)
 
     # get a ton of <sound, text> pairs and train
-    train_dataset = load_dataset("config.text_audio_pairs_train")
+    train_dataset = load_dataset(config.text_audio_pairs_train)
 
     # test dataset
-    test_dataset = load_dataset("config.text_audio_pairs_test")
+    test_dataset = load_dataset(config.text_audio_pairs_test)
 
     # make a dataloader
     train_dataloader = torch.utils.data.DataLoader(dataset, batch_size=config.batch_size, shuffle=True)
@@ -167,14 +167,10 @@ def main(config):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    
-    parser.add_argument('--text_audio_pairs_train', type=str, required=True)
-    parser.add_argument('--text_audio_pairs_test', type=str, required=True)
-    parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu')
     parser.add_argument('--config' , type=str, default='config_mulan.yaml')
 
     args = parser.parse_args()
 
     config = load_config(args.config)
 
-    main(config, args)
+    main(config)
