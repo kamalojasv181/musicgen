@@ -1,0 +1,34 @@
+device: cuda
+mulan_path: output/music-lm/mulan/wandb/latest-run/files/best_model.pt
+
+semantic_transformer:
+  dim: 1024
+  depth: 6
+
+coarse_transformer:
+  dim: 1024
+  depth: 6
+  num_fine_quantizers: 3
+  codebook_size: 1024
+
+fine_transformer:
+  num_fine_quantizers: 3
+  num_fine_quantizers: 5
+  dim: 1024
+  depth: 6
+  codebook_size: 1024
+
+soundstream:
+  rq_num_quantizers: 8
+  rq_groups: 2
+  attn_window_size: 128
+  attn_depth: 2
+  get_accum_every: 1
+
+train_audios_folder: ../../sample_data/data
+
+batch_size: 32
+data_max_length_seconds: 2
+num_train_steps: 1_000_000
+data_max_length: 320*32
+musiclm_path: ./output/music-lm

@@ -30,7 +30,7 @@ def download_hubert():
 if __name__=="__main__":
 
     # load the config TODO: create a config file
-    config = load_config("music_lm.yaml")
+    config = load_config("config_music_lm.yaml")
 
     # download hubert
     download_hubert()
@@ -61,8 +61,9 @@ if __name__=="__main__":
 
     # create a coarse transformer
     coarse_transformer = CoarseTransformer(
-        num_coarse_tokens=wav2vec.codebook_size,
+        num_semantic_tokens=wav2vec.codebook_size,
         dim=config.coarse_transformer.dim,
+        codebook_size=config.coarse_transformer.codebook_size,
         depth=config.coarse_transformer.depth,
         num_coarse_quantizers=config.coarse_transformer.num_coarse_quantizers,
         audio_text_condition=True
