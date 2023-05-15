@@ -126,7 +126,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--audio_folder",
         type=str,
-        default="sd",
+        default="dataset",
         help="Path to the folder containing the audio files",
     )
 
