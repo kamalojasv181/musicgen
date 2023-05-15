@@ -9,11 +9,7 @@ from utils import *
 def dropout(probability):
     return random.random() < probability
 
-def save_wav(data, path, sr):
-    import soundfile as sf
-    sf.write(path, data, sr, "PCM_24")
-
-def get_metadata(audio_file):
+def get_metadata(audio_folder, audio_file):
     audio = mutagen.File(audio_folder + "/" + audio_file)
 
     if audio is None:
@@ -61,7 +57,7 @@ def get_text(metadata, use_dropout=True):
     return metadata
 
 
-def split_audios(metadata_list, split_size=4, split_len=45):
+def split_audios(metadata_list, split_size=4, split_len=45, audio_folder="data"):
 
     metadata_new = []
 
@@ -126,6 +122,9 @@ def split_audios(metadata_list, split_size=4, split_len=45):
             # delete the original audio
             os.remove(metadata["path"])
 
+        # save the metadata
+        save_jsonl(metadata_list, f"{audio_folder}/metadata.jsonl")
+
     return metadata_new
 
 
@@ -162,7 +161,7 @@ if __name__ == "__main__":
     metadata_list = []
 
     for audio_file in audio_files:
-        metadata_current = get_metadata(audio_file)
+        metadata_current = get_metadata(audio_folder, audio_file)
 
         if metadata_current is not None:
             metadata_list.append(metadata_current)
@@ -174,7 +173,4 @@ if __name__ == "__main__":
         os.makedirs(audio_folder + "/data")
 
     # split the audios into 45 second chunks
-    metadata_list = split_audios(metadata_list)
-
-    # save the metadata
-    save_jsonl(metadata_list, f"{audio_folder}/metadata.jsonl")
+    metadata_list = split_audios(metadata_list, audio_folder=audio_folder)
