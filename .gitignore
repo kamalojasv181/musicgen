@@ -10,3 +10,6 @@ data_1/
 music_data_2.zip
 training/music-lm/.cache/
 sd/
+zips/
+out.txt
+err.txt
