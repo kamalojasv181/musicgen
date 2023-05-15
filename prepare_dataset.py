@@ -137,7 +137,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--audio_folder",
         type=str,
-        default="dataset",
+        default="sd",
         help="Path to the folder containing the audio files",
     )
     parser.add_argument(
@@ -153,6 +153,19 @@ if __name__ == "__main__":
     set_seed(args.seed)
 
     audio_folder = args.audio_folder
+
+    # get the list of audio files
+    audio_files = os.listdir(audio_folder)
+
+    # create a list of files containing non-asii characters
+    non_ascii_files = []
+    for audio_file in audio_files:
+        if not audio_file.isascii():
+            non_ascii_files.append(audio_file)
+
+    # delete the files containing non-ascii characters
+    for audio_file in non_ascii_files:
+        os.remove(audio_folder + "/" + audio_file)
 
     # get the list of audio files
     audio_files = os.listdir(audio_folder)
