@@ -15,6 +15,9 @@ def save_wav(data, path, sr):
 
 def get_metadata(audio_file):
     audio = mutagen.File(audio_folder + "/" + audio_file)
+
+    if audio is None:
+        return None
     
     metadata = {
         "title": audio.tags["TIT2"].text[0] if "TIT2" in audio.tags else None,
@@ -138,7 +141,13 @@ if __name__ == "__main__":
     audio_files = os.listdir(audio_folder)
 
     # get the metadata for each audio file
-    metadata_list = [get_metadata(audio_file) for audio_file in audio_files]
+    metadata_list = []
+
+    for audio_file in audio_files:
+        metadata_current = get_metadata(audio_file)
+
+        if metadata_current is not None:
+            metadata_list.append(metadata_current)
 
     # get the text for each audio file
     metadata_list = [get_text(metadata) for metadata in metadata_list]
