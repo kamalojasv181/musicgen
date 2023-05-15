@@ -87,5 +87,25 @@ def save_wav(data, path, sr):
     sf.write(path, data, sr, "PCM_24")
 
 def song_prompt_to_name(song_prompt):
-    # capitalize every word, remove punctuation marks and join with underscores
-    return "_".join([word.capitalize() for word in song_prompt.replace(",", "").replace(".", "").split(" ")])
+    # capitalize every word, remove punctuation marks like comma, period, etc.
+    song_prompt = song_prompt.replace(".", "").replace("?", "").replace("!", "").replace(":", "").replace(";", "").replace("(", "").replace(")", "").replace("'", "").replace('"', "").replace("/", "")
+
+    # replace spaces with underscores
+    song_prompt = song_prompt.replace(" ", "_").replace(",", "")
+
+    # remove multiple underscores
+    song_prompt = song_prompt.replace("__", "_")
+
+    # remove trailing underscores
+    song_prompt = song_prompt.strip("_")
+
+    # convert to lowercase
+    song_prompt = song_prompt.lower()
+
+    return song_prompt
+
+def save_jsonl(data, path):
+    import json
+    with open(path, "w") as f:
+        for point in data:
+            f.write(json.dumps(point) + "\n")
