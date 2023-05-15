@@ -29,7 +29,7 @@ def download_hubert():
 
 if __name__=="__main__":
 
-    # load the config TODO: create a config file
+    # load the config
     config = load_config("config_music_lm.yaml")
 
     # download hubert
@@ -117,6 +117,7 @@ if __name__=="__main__":
     trainer = CoarseTransformerTrainer(
         transformer=coarse_transformer,
         codec=soundstream,
+        wav2vec=wav2vec,
         audio_conditioner=quantizer,
         folder=config.train_audios_folder,
         batch_size=config.batch_size,
@@ -130,11 +131,11 @@ if __name__=="__main__":
     trainer = FineTransformerTrainer(
         transformer=fine_transformer,
         codec=soundstream,
-        audio_conditioner=quantizer,
         folder=config.train_audios_folder,
         batch_size=config.batch_size,
         data_max_length=config.data_max_length,
-        num_train_steps=config.num_train_steps
+        num_train_steps=config.num_train_steps,
+        audio_conditioner=quantizer
     )
 
     trainer.train()
@@ -146,7 +147,6 @@ if __name__=="__main__":
         semantic_transformer=semantic_transformer,
         coarse_transformer=coarse_transformer,
         fine_transformer=fine_transformer,
-        audio_conditioner=quantizer
     )
 
     musiclm = MusicLM(
@@ -155,4 +155,7 @@ if __name__=="__main__":
     )
 
     # save the model
-    torch.save(musiclm, config.musiclm_path)
+    # torch.save(musiclm,  os.path.join(config.save_folder, "musiclm.pt"))
+
+    # pickle the model
+    save_pickle(data=musiclm, path=os.path.join(config.save_folder, "musiclm.pkl"))
