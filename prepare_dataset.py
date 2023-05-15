@@ -123,7 +123,7 @@ def split_audios(metadata_list, split_size=4, split_len=45, audio_folder="data")
             os.remove(metadata["path"])
 
         # save the metadata
-        save_jsonl(metadata_list, f"{audio_folder}/metadata_new.jsonl")
+        save_jsonl(metadata_new, f"{audio_folder}/metadata_new.jsonl")
 
     return metadata_new
 
