@@ -77,10 +77,15 @@ def split_audios(metadata_list, split_size=4, split_len=45):
             # split the audio into chunks of 45 seconds into as many chunks as possible
             for i in range(audio_len // split_len):
                 audio_new = audio[i * split_len * 48000 : (i + 1) * split_len * 48000]
+                
+                name = song_prompt_to_name(metadata["text"])
+                if len(name) > 180:
+                    name = name[:180]
+
                 metadata_new.append(
                     {
                         "text": metadata["text"] + f" {i+1} of {split_size}",
-                        "file_name": "data" + "/" + song_prompt_to_name(metadata["text"] + f" {i+1} of {split_size}") + ".wav",
+                        "file_name": "data" + "/" + song_prompt_to_name(name + f" {i+1} of {split_size}") + ".wav",
                     }
                 )
 
@@ -99,11 +104,15 @@ def split_audios(metadata_list, split_size=4, split_len=45):
             for i in range(split_size):
                 start = random.randint(0, audio_len - split_len) * 48000
                 audio_new = audio[start : start + split_len * 48000]
+  
+                name = song_prompt_to_name(metadata["text"])
+                if len(name) > 180:
+                    name = name[:180]
+
                 metadata_new.append(
                     {
                         "text": metadata["text"] + f" {i+1} of {split_size}",
-                        "file_name": "data" + "/" + song_prompt_to_name(metadata["text"] + f" {i+1} of {split_size}") + ".wav",
-
+                        "file_name": "data" + "/" + song_prompt_to_name(name + f" {i+1} of {split_size}") + ".wav",
                     }
                 )
 
@@ -132,8 +141,17 @@ if __name__ == "__main__":
         default="dataset",
         help="Path to the folder containing the audio files",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility",
+    )
 
     args = parser.parse_args()
+
+    # set the random seed
+    set_seed(args.seed)
 
     audio_folder = args.audio_folder
 
@@ -160,4 +178,3 @@ if __name__ == "__main__":
 
     # save the metadata
     save_jsonl(metadata_list, f"{audio_folder}/metadata.jsonl")
-    
