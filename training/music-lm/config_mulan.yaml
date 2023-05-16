@@ -1,6 +1,6 @@
 audio_transformer:
   dim: 512
-  depth: 3
+  depth: 6
   heads: 4
   dim_head: 64
   spec_n_fft: 128
@@ -9,7 +9,7 @@ audio_transformer:
 
 text_transformer: 
   dim: 512
-  depth: 3
+  depth: 6
   heads: 4
   dim_head: 64
 

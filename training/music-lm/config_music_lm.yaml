@@ -3,11 +3,11 @@ mulan_path: output/music-lm/mulan/wandb/latest-run/files/best_model.pt
 
 semantic_transformer:
   dim: 1024
-  depth: 6
+  depth: 12
 
 coarse_transformer:
   dim: 1024
-  depth: 6
+  depth: 12
   num_coarse_quantizers: 3
   codebook_size: 1024
 
@@ -15,7 +15,7 @@ fine_transformer:
   num_coarse_quantizers: 3
   num_fine_quantizers: 5
   dim: 1024
-  depth: 6
+  depth: 12
   codebook_size: 1024
 
 soundstream:
