@@ -53,7 +53,7 @@ if __name__=='__main__':
 
     data = data.map(encode_text)
 
-    data = data["train"].train_test_split(test_size=0.25)
+    data = data["train"].train_test_split(test_size=0.05)
 
     data = data.map(remove_path)
 
