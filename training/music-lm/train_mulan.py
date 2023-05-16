@@ -88,7 +88,7 @@ def main(config):
         # train
         for batch_idx, batch in enumerate(train_dataloader):
 
-            texts, audios = batch['name'], batch['audio']
+            texts, audios = batch['text'], batch['audio']
 
             # put audios on device
             audios = audios.to(config.device)
@@ -133,7 +133,7 @@ def main(config):
 
                 for batch_idx, batch in enumerate(test_loader):
 
-                    texts, audios = batch['name'], batch['audio']
+                    texts, audios = batch['text'], batch['audio']
 
                     # put audios on device
                     audios = audios.to(config.device)
