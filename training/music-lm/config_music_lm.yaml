@@ -8,11 +8,11 @@ semantic_transformer:
 coarse_transformer:
   dim: 1024
   depth: 6
-  num_fine_quantizers: 3
+  num_coarse_quantizers: 3
   codebook_size: 1024
 
 fine_transformer:
-  num_fine_quantizers: 3
+  num_coarse_quantizers: 3
   num_fine_quantizers: 5
   dim: 1024
   depth: 6
