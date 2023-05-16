@@ -22,10 +22,10 @@ wandb:
 
 device: cuda
 lr: 0.0001
-batch_size: 4
+batch_size: 32
 patience: 5
 max_epochs: 100
-max_iters: 10
-iters_before_eval: 2
+max_iters: 100000
+iters_before_eval: 10000
 dataset_path: "../../sample_data_hf"
 seed: 42
