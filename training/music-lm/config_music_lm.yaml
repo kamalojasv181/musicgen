@@ -23,12 +23,11 @@ soundstream:
   rq_groups: 2
   attn_window_size: 128
   attn_depth: 2
-  get_accum_every: 1
+  grad_accum_every: 1
 
-train_audios_folder: ../../sample_data/data
+train_audios_folder: ../../data/data
 
 batch_size: 32
-data_max_length_seconds: 2
-num_train_steps: 1_000_000
+data_max_length_seconds: 45
+num_train_steps: 1000000
 data_max_length: 320*32
-musiclm_path: ./output/music-lm
