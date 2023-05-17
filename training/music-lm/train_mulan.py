@@ -90,6 +90,8 @@ def main(config):
 
             texts, audios = batch['text'], batch['audio']
 
+            audios = audios[:, :int(config.audio_length * config.sr)]
+
             # put audios on device
             audios = audios.to(config.device)
             texts = texts.to(config.device)
@@ -101,14 +103,18 @@ def main(config):
             # do forward pass
             loss = model(wavs=audios, texts=texts)
 
-            # do backward pass
-            loss.backward()
+            loss = loss / config.accumulation_steps
 
-            # update parameters
-            optimizer.step()
+            if batch_idx % config.accumulation_steps == 0:
+                
+                # do backward pass
+                loss.backward()
 
-            # zero out gradients
-            optimizer.zero_grad()
+                # update parameters
+                optimizer.step()
+
+                # zero out gradients
+                optimizer.zero_grad()
 
             # print loss
             print(f'Running Training Loss: {loss.item()}')
@@ -131,21 +137,25 @@ def main(config):
 
                 test_loss = 0
 
-                for batch_idx, batch in enumerate(test_loader):
+                with torch.no_grad():
 
-                    texts, audios = batch['text'], batch['audio']
+                    for batch_idx, batch in enumerate(test_loader):
 
-                    # put audios on device
-                    audios = audios.to(config.device)
-                    texts = texts.to(config.device)
+                        texts, audios = batch['text'], batch['audio']
 
-                    audios = audios.squeeze(1)
-                    texts = texts.squeeze(1)
+                        audios = audios[:, :int(config.audio_length * config.sr)]
 
-                    # do forward pass
-                    loss = model(wavs=audios, texts=texts)
+                        # put audios on device
+                        audios = audios.to(config.device)
+                        texts = texts.to(config.device)
 
-                    test_loss += loss.item()
+                        audios = audios.squeeze(1)
+                        texts = texts.squeeze(1)
+
+                        # do forward pass
+                        loss = model(wavs=audios, texts=texts)
+
+                        test_loss += loss.item()
 
                 test_loss /= len(test_loader)
 
