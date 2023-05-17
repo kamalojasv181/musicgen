@@ -18,6 +18,9 @@ if __name__=="__main__":
     if not os.path.exists("./soundstream_results"):
         os.makedirs("./soundstream_results")
 
+    if torch.cuda.is_available():
+        print("Number of available GPUs: {}".format(torch.cuda.device_count()))
+
     # create a soundstream
     soundstream = SoundStream(
         codebook_size=config.fine_transformer.codebook_size,
@@ -35,8 +38,8 @@ if __name__=="__main__":
         grad_accum_every=config.soundstream.grad_accum_every,
         data_max_length_seconds=config.data_max_length_seconds,
         num_train_steps=config.num_train_steps,
-        force_clear_prev_results=True,
-        save_model_every=100000,
+        force_clear_prev_results=False,
+        save_model_every=5000,
         results_folder="./soundstream_results"
     )
 
