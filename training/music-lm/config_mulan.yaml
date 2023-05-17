@@ -18,7 +18,7 @@ wandb:
   path: "./output/music-lm/mulan"
   run_name: "mulan-train"
   job_type: "music-lm"
-  mode: "offline"
+  mode: "online"
 
 device: cuda
 lr: 0.0001
@@ -27,7 +27,7 @@ patience: 5
 max_epochs: 100
 max_iters: 100000
 iters_before_eval: 10000
-dataset_path: "../../sample_data_hf"
+dataset_path: "../../data_hf"
 seed: 42
 audio_length: 1.9
 sr: 48000
