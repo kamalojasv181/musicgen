@@ -66,8 +66,8 @@ def update_cache(prompt, output_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", type=str, default='mousai.yaml')
-    parser.add_argument("--text_prompts", type=str, default='../prompts/electronic.txt')
-    parser.add_argument("--output_dir", type=str, default='../output_1/mousai')
+    parser.add_argument("--text_prompts", type=str, default='../prompts/pop.txt')
+    parser.add_argument("--output_dir", type=str, default='../output/mousai')
     args = parser.parse_args()
 
     # if the output dir does not exist, create it

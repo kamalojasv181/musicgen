@@ -1,4 +1,4 @@
-model_name: archinetai/mousai-v1
+model_name: archinetai/mousai-v3
 seed: 42
 sampling_steps: 100
 decoding_steps: 100 
