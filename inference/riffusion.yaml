@@ -1,0 +1,4 @@
+model_name: riffusion/riffusion-model-v1
+seed: 42
+length: 40
+device: cuda
