@@ -16,6 +16,5 @@ err.txt
 test_data/
 test_data.zip
 test_new.zip
-data_hf/
-training/music-lm/soundstream_results/
-
+inference/.musika/
+inference/musika/checkpoints/
