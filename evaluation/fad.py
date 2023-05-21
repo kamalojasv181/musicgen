@@ -11,6 +11,8 @@ if __name__ == "__main__":
     parser.add_argument("--background", type=str, required=True, help="Path to the background audio directory")
     parser.add_argument("--eval", type=str, required=True, help="Path to the eval audio directory")
 
+    args = parser.parse_args()
+
 
     # to use `PANN`
 
