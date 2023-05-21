@@ -18,3 +18,5 @@ test_data.zip
 test_new.zip
 inference/.musika/
 inference/musika/checkpoints/
+evaluation/Cnn14_16k_mAP%3D0.438.pth
+test_data_1/
