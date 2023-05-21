@@ -9,6 +9,7 @@ import torch
 import sys
 import shutil
 import numpy as np
+from tqdm import tqdm
 sys.path.append("../")
 
 from utils import *
@@ -33,12 +34,16 @@ def check_output_in_cache(prompt, output_dir):
         file_path = riffusion_cache[prompt]
 
         # check if the file exists
-        if os.path.exists(file_path) and file_path == os.path.join(output_dir, song_prompt_to_name(prompt) + ".wav"):
+        save_path = song_prompt_to_name(prompt)
+        if len(save_path) > 230:
+            save_path = save_path[:230]
+
+        if os.path.exists(file_path) and file_path == os.path.join(output_dir, save_path + ".wav"):
             return True
 
         elif os.path.exists(file_path):
             # copy the file to the output dir
-            shutil.copy(file_path, os.path.join(output_dir, song_prompt_to_name(prompt) + ".wav"))
+            shutil.copy(file_path, os.path.join(output_dir, save_path + ".wav"))
             return True
 
         else:
@@ -83,8 +88,9 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", type=str, default="./riffusion.yaml")
-    parser.add_argument("--text_prompts", type=str, default='../prompts/electronic.txt')
-    parser.add_argument("--output_dir", type=str, default='../output/riffusion')
+    parser.add_argument("--text_prompts", type=str, default='../test_data/test_texts.txt')
+    parser.add_argument("--output_dir", type=str, default='../output/riffusion/test_1000/')
+    args = parser.parse_args()
 
     args = parser.parse_args()
 
@@ -124,9 +130,12 @@ if __name__=="__main__":
     pipe = DiffusionPipeline.from_pretrained(config.model_name)
     pipe = pipe.to(device)
 
-    for prompt in prompts:
+    for prompt in tqdm(prompts):
 
         save_path = song_prompt_to_name(song_prompt=prompt)
+
+        if len(save_path) > 230:
+            save_path = save_path[:230]
 
         predict(prompt, os.path.join(args.output_dir, save_path + ".wav"), config.length)
 

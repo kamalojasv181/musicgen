@@ -109,3 +109,9 @@ def save_jsonl(data, path):
     with open(path, "w") as f:
         for point in data:
             f.write(json.dumps(point) + "\n")
+
+def load_jsonl(path):
+    import json
+    with open(path, "r") as f:
+        data = [json.loads(line) for line in f]
+    return data

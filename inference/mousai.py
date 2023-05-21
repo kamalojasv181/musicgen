@@ -6,6 +6,7 @@ import torch
 import sys
 import shutil
 import numpy as np
+from tqdm import tqdm
 
 sys.path.append("../")
 
@@ -66,8 +67,8 @@ def update_cache(prompt, output_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", type=str, default='mousai.yaml')
-    parser.add_argument("--text_prompts", type=str, default='../prompts/pop.txt')
-    parser.add_argument("--output_dir", type=str, default='../output/mousai')
+    parser.add_argument("--text_prompts", type=str, default='../test_data/test_texts.txt')
+    parser.add_argument("--output_dir", type=str, default='../output/mousai/test_1000/')
     args = parser.parse_args()
 
     # if the output dir does not exist, create it
@@ -102,28 +103,35 @@ if __name__ == "__main__":
     # load the model
     model = AutoModel.from_pretrained(config.model_name, trust_remote_code=True, use_auth_token= os.environ["HUGGINGFACE_TOKEN"]).to(device)
 
-    # generate the audios
-    samples, info = model.sample(
-    text=prompts,
-    sampling_steps=100,
-    decoding_steps=100, 
-    cfg_scale=8.0, 
-    seed=42, 
-    length=2048
-    )
 
-    # save the audios
-    for i, (sample, prompt) in enumerate(zip(samples, info["text"])):
-        sample_cpu = sample.cpu().numpy()
+    # divide the prompts into batches
+    prompts = [prompts[i:i + config.batch_size] for i in range(0, len(prompts), config.batch_size)]
 
-        # transpose the sample
-        sample_cpu = np.transpose(sample_cpu)
 
-        save_file_name =  song_prompt_to_name(prompt)
+    for prompts_batch in tqdm(prompts):
 
-        # save the audio
-        save_wav(sample_cpu, os.path.join(args.output_dir, save_file_name + ".wav"), config.sr)
+        # generate the audios
+        samples, info = model.sample(
+        text=prompts_batch,
+        sampling_steps=100,
+        decoding_steps=100, 
+        cfg_scale=8.0, 
+        seed=42, 
+        length=2048
+        )
 
-        # update the cache
-        update_cache(prompt, args.output_dir)
+        # save the audios
+        for i, (sample, prompt) in enumerate(zip(samples, info["text"])):
+            sample_cpu = sample.cpu().numpy()
+
+            # transpose the sample
+            sample_cpu = np.transpose(sample_cpu)
+
+            save_file_name =  song_prompt_to_name(prompt)
+
+            # save the audio
+            save_wav(sample_cpu, os.path.join(args.output_dir, save_file_name + ".wav"), config.sr)
+
+            # update the cache
+            update_cache(prompt, args.output_dir)
 
