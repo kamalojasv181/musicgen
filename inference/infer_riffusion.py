@@ -88,8 +88,8 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", type=str, default="./riffusion.yaml")
-    parser.add_argument("--text_prompts", type=str, default='../test_data/test_texts.txt')
-    parser.add_argument("--output_dir", type=str, default='../output/riffusion/test_1000/')
+    parser.add_argument("--text_prompts", type=str, default='../prompts/test.txt')
+    parser.add_argument("--output_dir", type=str, default='../diversity/riffusion/')
     args = parser.parse_args()
 
     args = parser.parse_args()
@@ -110,7 +110,7 @@ if __name__=="__main__":
     prompts = [prompt for prompt in prompts if prompt != ""]
 
     # filter the prompts
-    prompts = [prompt for prompt in prompts if not check_output_in_cache(prompt, args.output_dir)]
+    # prompts = [prompt for prompt in prompts if not check_output_in_cache(prompt, args.output_dir)]
 
     # if there are no prompts to generate, exit
     if len(prompts) == 0:
@@ -130,13 +130,16 @@ if __name__=="__main__":
     pipe = DiffusionPipeline.from_pretrained(config.model_name)
     pipe = pipe.to(device)
 
-    for prompt in tqdm(prompts):
+    for id, prompt in tqdm(enumerate(prompts)):
 
-        save_path = song_prompt_to_name(song_prompt=prompt)
+        save_path = str(config.seed)
 
         if len(save_path) > 230:
             save_path = save_path[:230]
 
-        predict(prompt, os.path.join(args.output_dir, save_path + ".wav"), config.length)
+        if not os.path.exists(os.path.join(args.output_dir, str(id))):
+            os.mkdir(os.path.join(args.output_dir, str(id)))
 
-        update_cache(prompt, args.output_dir)
+        predict(prompt, os.path.join(args.output_dir, str(id) , save_path + ".wav"), config.length)
+
+        # update_cache(prompt, args.output_dir)

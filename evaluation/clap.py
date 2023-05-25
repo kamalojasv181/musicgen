@@ -13,9 +13,11 @@ if __name__ == "__main__":
 
     # parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--audio_text_pairs", type=str, required=True, help="Path to the audio-text pairs", default="atp.json")
+    parser.add_argument("--audio_text_pairs", type=str, help="Path to the audio-text pairs", default="audio_text_pairs/mousai.json")
 
     args = parser.parse_args()
+
+    set_seed(42)
 
     # load audio-text pairs
     audio_text_pairs = load_json(path=args.audio_text_pairs)

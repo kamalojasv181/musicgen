@@ -67,8 +67,9 @@ def update_cache(prompt, output_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", type=str, default='mousai.yaml')
-    parser.add_argument("--text_prompts", type=str, default='../test_data/test_texts.txt')
-    parser.add_argument("--output_dir", type=str, default='../output/mousai/test_1000/')
+    parser.add_argument("--text_prompts", type=str, default='../prompts/test.txt')
+    parser.add_argument("--output_dir", type=str, default='../output_1')
+    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
     # if the output dir does not exist, create it
@@ -116,7 +117,7 @@ if __name__ == "__main__":
         sampling_steps=100,
         decoding_steps=100, 
         cfg_scale=8.0, 
-        seed=42, 
+        seed=config.seed, 
         length=2048
         )
 

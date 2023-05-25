@@ -6,4 +6,4 @@ cfg_scale: 8.0
 length: 2048
 sr: 48000
 device: cuda
-batch_size: 32
+batch_size: 1

@@ -20,3 +20,8 @@ inference/.musika/
 inference/musika/checkpoints/
 evaluation/Cnn14_16k_mAP%3D0.438.pth
 test_data_1/
+evaluation/audio_text_pairs/
+quality/
+fidelity/
+quality_intelligibility_coherence_musicality/
+diversity/

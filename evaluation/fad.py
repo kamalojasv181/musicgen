@@ -13,11 +13,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-
-    # to use `PANN`
-
     frechet = FrechetAudioDistance(
-        model_name="pann",
+        model_name="vggish",
         use_pca=False, 
         use_activation=False,
         verbose=False
