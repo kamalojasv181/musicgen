@@ -20,3 +20,5 @@ tqdm==4.62.3
 pydub==0.25.1
 mutagen==1.46.0
 diffusers==0.16.1
+plotly==5.14.1
+pytorch_lightning==2.0.2
