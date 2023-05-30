@@ -86,7 +86,7 @@ if __name__ == "__main__":
     prompts = read_txt(args.text_prompts).split('\n')
 
     # filter the prompts
-    prompts = [prompt for prompt in prompts if not check_output_in_cache(prompt, args.output_dir)]
+    # prompts = [prompt for prompt in prompts if not check_output_in_cache(prompt, args.output_dir)]
 
     # if there are no prompts, exit
     if len(prompts) == 0:

@@ -22,8 +22,8 @@ from tqdm import tqdm
 
 from archisound import ArchiSound
 from transformers import AutoModel 
+import os
 
-""" Model """
 
 torch.set_float32_matmul_precision('high')
 
@@ -34,7 +34,7 @@ UNetT = lambda: UNetV0
 def dropout(proba: float):
     return random.random() < proba
 
-class Model(pl.LightningModule):
+class Module(pl.LightningModule):
     def __init__(
         self,
         lr: float,
@@ -58,7 +58,7 @@ class Model(pl.LightningModule):
         self.model_ema = EMA(self.model, beta=ema_beta, power=ema_power)
         self.embedding_mask_proba = embedding_mask_proba
         self.autoencoder = AutoModel.from_pretrained(
-            f"archinetai/{autoencoder_name}", trust_remote_code=True
+            f"archinetai/{autoencoder_name}", trust_remote_code=True, use_auth_token=os.environ["HUGGINGFACE_TOKEN"]
         )
 
     @property
@@ -78,7 +78,7 @@ class Model(pl.LightningModule):
     def get_texts(self, infos: Dict, use_dropout: bool = True) -> List[str]:
         texts = []
 
-        batch_size = len(infos['title'])
+        batch_size = len(infos['title'][0])
         for i in range(batch_size):
             tags = []
             if infos['title'][0][i] != None and not (dropout(0.1) and use_dropout):
@@ -96,8 +96,8 @@ class Model(pl.LightningModule):
             if infos['year'][0][i] != None and not (dropout(0.2) and use_dropout):
                 tags.append(infos['year'][0][i])
 
-            if infos['crop_id'][0][i] != None and infos['num_crops'][0][i] != None and not (dropout(0.2) and use_dropout):
-                tags.append(f"{infos['crop_id'][0][i]+1} of {infos['num_crops'][0][i]}")
+            if infos['crop_id'][i].item() != None and infos['num_crops'][i].item() != None and not (dropout(0.2) and use_dropout):
+                tags.append(f"{infos['crop_id'][i].item()+1} of {infos['num_crops'][i].item()}")
 
             random.shuffle(tags)
             text = ' '.join(tags) if random.random() > 0.5 else ', '.join(tags)
@@ -110,7 +110,7 @@ class Model(pl.LightningModule):
         return self.autoencoder.encode(wave)
 
     def training_step(self, batch, batch_idx):
-        wave, info = batch
+        wave, info = batch["wave"], batch["info"]
         latent = self.encode(wave)
         text = self.get_texts(info) 
         loss = self.model(latent, text=text, embedding_mask_proba=self.embedding_mask_proba)
@@ -120,42 +120,9 @@ class Model(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        wave, info = batch 
+        wave, info = batch["wave"], batch["info"]
         latent = self.encode(wave)
         text = self.get_texts(info) 
         loss = self.model(latent, text=text)
         self.log("valid_loss", loss, sync_dist=True)
         return loss
-
-
-""" Datamodule """
-
-class Datamodule(pl.LightningDataModule):
-    def __init__(
-        self,
-        dataset_train,
-        dataset_valid,
-        *,
-        num_workers: int,
-        **kwargs: int,
-    ) -> None:
-        super().__init__()
-        self.dataset_train = dataset_train
-        self.dataset_valid = dataset_valid
-        self.num_workers = num_workers
-
-    def get_dataloader(self, dataset) -> DataLoader:
-        return DataLoader(
-            dataset=dataset,            
-            num_workers=self.num_workers,
-            batch_size=None, 
-            shuffle=False,
-            pin_memory=False,
-            prefetch_factor=2,
-        )
-
-    def train_dataloader(self) -> DataLoader:
-        return self.get_dataloader(self.dataset_train)
-
-    def val_dataloader(self) -> DataLoader:
-        return self.get_dataloader(self.dataset_valid)

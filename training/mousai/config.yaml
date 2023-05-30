@@ -1,20 +1,19 @@
 # @package _global_
 
 # python train.py exp=diff_lat_txt_0
-module: main.module_diff_lat_txt_0 # TODO change to your module name
-scratch_dir: /scratch # TODO change this to your scratch dir
+scratch_dir: ./scratch
 #device: [0]
 num_workers: 12
 batch_size: 32
 
 sampling_rate: 48000
-length: 96000 # TODO, change it back to 2097152
+length: 144000
 channels: 2
 log_every_n_steps: 1000
 ckpt_every_n_steps: 5000
 
-model:
-  _target_: ${module}.Model
+module:
+  _target_: module.Module
   lr: 1e-4
   lr_beta1: 0.95
   lr_beta2: 0.999
@@ -22,10 +21,11 @@ model:
   lr_weight_decay: 1e-3
   ema_beta: 0.995
   ema_power: 0.7
-  embedding_mask_proba: 0.1 
+  embedding_mask_proba: 0.1
+  autoencoder_name: dmae1d-ATC64-v4
 
   model:
-    _target_: audio_diffusion_pytorch.models.DiffusionModel 
+    _target_: audio_diffusion_pytorch.models.DiffusionModel
     in_channels: 32
     dim: 1 
     channels: [128, 256, 512, 512, 1024, 1024]
@@ -40,17 +40,13 @@ model:
     use_text_conditioning: True 
     use_embedding_cfg: True 
 
-# TODO: change completely
 datamodule:
-  _target_: ${module}.Datamodule
   num_workers: ${num_workers}
   dataset_train:
-    _target_: main.dataset.AudioWebDataset
-    urls: pipe:aws s3 cp s3://s-harmonai/flavio/data/mix44s0/mix-{000000..000753}.tar -
+    path: ../../test_data/train_dataset.hf
     batch_size: ${batch_size}
   dataset_valid:
-    _target_: main.dataset.AudioWebDataset
-    urls: pipe:aws s3 cp s3://s-harmonai/flavio/data/mix44s0/mix-000755.tar -
+    path: ../../test_data/test_dataset.hf
     batch_size: ${batch_size}
 
 callbacks:
@@ -60,7 +56,7 @@ callbacks:
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
     save_last: True 
-    dirpath: /fsx/flavioschneider/ckpts/${now:%Y-%m-%d-%H-%M-%S}/ # TODO change this to your ckpt dir
+    dirpath: ./outputs
     every_n_train_steps: ${ckpt_every_n_steps}
 
   model_summary:
@@ -68,7 +64,7 @@ callbacks:
     max_depth: 2
 
   audio_samples_logger:
-    _target_: ${module}.SampleLogger
+    _target_: logger.SampleLogger
     num_items: 3
     channels: ${channels}
     sampling_rate: ${sampling_rate}
@@ -80,8 +76,8 @@ callbacks:
 loggers:
   wandb:
     _target_: pytorch_lightning.loggers.wandb.WandbLogger
-    project: ${oc.env:WANDB_PROJECT} # TODO add your wandb project name
-    entity: ${oc.env:WANDB_ENTITY} # TODO add your wandb entity name
+    project: mousai
+    entity: ${oc.env:WANDB_ENTITY}
     # offline: False  # set True to store all logs only locally
     job_type: "train"
     group: ""
@@ -90,14 +86,14 @@ loggers:
 trainer:
   _target_: pytorch_lightning.Trainer
   precision: 32 # Precision used for tensors, default `32`
-  accelerator: gpu 
+  accelerator: cpu 
   # devices: ${device}
   # strategy: ddp
   min_epochs: 0
-  max_epochs: -1
+  max_epochs: 1
   enable_model_summary: False
   log_every_n_steps: 1 # Logs metrics every N batches
   limit_val_batches: 10 
   check_val_every_n_epoch: null
-  val_check_interval: ${log_every_n_steps}
+  val_check_interval: 5
   # default_root_dir: s3://s-harmonai/flavio/ckpts/${now:%Y-%m-%d-%H-%M-%S}/
