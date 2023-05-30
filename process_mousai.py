@@ -52,6 +52,9 @@ if __name__ == '__main__':
         # find the length of the audio in number of samples
         audio_len = audio.shape[1]
 
+        if audio_len < 2097152:
+            continue
+
         # get 4 random chunks of 2097152 samples each
         starts = []
 
