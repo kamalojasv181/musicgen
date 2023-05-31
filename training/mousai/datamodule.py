@@ -4,7 +4,7 @@ from math import pi
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from datasets import load_from_disk
+from datasets import load_from_disk, load_dataset
 
 class Datamodule(pl.LightningDataModule):
     def __init__(
@@ -17,8 +17,8 @@ class Datamodule(pl.LightningDataModule):
         **kwargs: int,
     ) -> None:
         super().__init__()
-        self.dataset_train = load_from_disk(dataset_train_path).with_format("torch")
-        self.dataset_valid = load_from_disk(dataset_valid_path).with_format("torch")
+        self.dataset_train = load_dataset("json", data_files=dataset_train_path).with_format("torch")["train"]
+        self.dataset_valid = load_dataset("json", data_files=dataset_valid_path).with_format("torch")["train"]
         self.num_workers = num_workers
         self.batch_size = batch_size
 
@@ -27,8 +27,8 @@ class Datamodule(pl.LightningDataModule):
             dataset=dataset,            
             num_workers=self.num_workers,
             batch_size=self.batch_size, 
-            shuffle=False,
-            pin_memory=False,
+            shuffle=True,
+            pin_memory=True,
             prefetch_factor=2,
         )
 

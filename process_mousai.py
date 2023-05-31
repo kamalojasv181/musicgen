@@ -6,6 +6,7 @@ import random
 import argparse
 import pandas as pd
 from datasets import Dataset
+import json
 
 
 def get_metadata(audio_file):
@@ -39,8 +40,6 @@ if __name__ == '__main__':
     data_folder = args.data_folder
 
     audio_files = glob.glob(os.path.join(data_folder, "*.mp3"))
-
-    data = []
 
     for audio_file in audio_files:
 
@@ -81,16 +80,6 @@ if __name__ == '__main__':
             datapoint_new["info"]["crop_id"] = i
             datapoint_new["info"]["num_crops"] = 4
 
-            data.append(datapoint_new)
-    
-
-    data = pd.DataFrame(data)
-
-    train_data = data.sample(frac=0.99, random_state=42)
-    test_data = data.drop(train_data.index)
-
-    train_dataset = Dataset.from_pandas(train_data)
-    test_dataset = Dataset.from_pandas(test_data)
-
-    train_dataset.save_to_disk(f"{data_folder}/train_dataset.hf")
-    test_dataset.save_to_disk(f"{data_folder}/test_dataset.hf")
+            with open(f"{data_folder}/train_data.json", "a") as f:
+                f.write(json.dumps(datapoint_new))
+                f.write("\n")
