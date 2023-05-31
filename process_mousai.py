@@ -34,6 +34,7 @@ if __name__ == '__main__':
     # add arguments to the parser
 
     parser.add_argument("--data_folder", type=str, help="Path to the folder containing the audio files")
+    parser.add_argument("--start_id", type=int, help="Start id for the audio files", default=0)
 
     args = parser.parse_args()
 
@@ -41,12 +42,19 @@ if __name__ == '__main__':
 
     audio_files = glob.glob(os.path.join(data_folder, "*.mp3"))
 
-    for audio_file in audio_files:
+    for id, audio_file in enumerate(audio_files):
+
+        if id < args.start_id:
+            continue
 
         metadata = get_metadata(audio_file)
 
         # get the audio as dual channel
         audio, sr = librosa.load(audio_file, sr=48000, mono=False)
+
+        # if we only get one dimension, then skip
+        if len(audio.shape) == 1:
+            continue
         
         # find the length of the audio in number of samples
         audio_len = audio.shape[1]
