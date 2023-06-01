@@ -17,8 +17,10 @@ class Datamodule(pl.LightningDataModule):
         **kwargs: int,
     ) -> None:
         super().__init__()
-        self.dataset_train = load_dataset("json", data_files=dataset_train_path).with_format("torch")["train"]
-        self.dataset_valid = load_dataset("json", data_files=dataset_valid_path).with_format("torch")["train"]
+        self.dataset_train = load_dataset("json", data_files=[dataset_train_path, dataset_valid_path]).with_format("torch")["train"]
+        self.dataset_train = self.dataset_train.train_test_split(test_size=0.01, seed=42)
+        self.dataset_valid = self.dataset_train["test"]
+        self.dataset_train = self.dataset_train["train"]
         self.num_workers = num_workers
         self.batch_size = batch_size
 
