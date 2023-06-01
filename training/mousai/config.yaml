@@ -43,10 +43,10 @@ module:
 datamodule:
   num_workers: ${num_workers}
   dataset_train:
-    path: ../../test_data/train_dataset.hf
+    path: ../../classical_music_data/train_data.json
     batch_size: ${batch_size}
   dataset_valid:
-    path: ../../test_data/test_dataset.hf
+    path: ../../classical_music_data_1/train_data.json
     batch_size: ${batch_size}
 
 callbacks:
@@ -87,8 +87,9 @@ trainer:
   _target_: pytorch_lightning.Trainer
   precision: 32 # Precision used for tensors, default `32`
   accelerator: gpu 
-  # devices: ${device}
-  # strategy: ddp
+  devices: -1
+  num_nodes: 16
+  strategy: ddp
   min_epochs: 0
   max_epochs: -1
   enable_model_summary: False
