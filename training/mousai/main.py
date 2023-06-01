@@ -84,6 +84,9 @@ if __name__ == "__main__":
     trainer = Trainer(
         logger=logger,
         callbacks=callbacks,
+        devices=config.trainer.devices,
+        strategy=config.trainer.strategy,
+        num_nodes=config.trainer.num_nodes,
         precision=config.trainer.precision,
         accelerator=config.trainer.accelerator,
         min_epochs=config.trainer.min_epochs,
