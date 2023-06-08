@@ -4,7 +4,7 @@
 scratch_dir: ./scratch
 #device: [0]
 num_workers: 12
-batch_size: 32
+batch_size: 8
 
 sampling_rate: 48000
 length: 2097152
@@ -43,10 +43,10 @@ module:
 datamodule:
   num_workers: ${num_workers}
   dataset_train:
-    path: ../../classical_music_data/train_data.json
+    path: ../../classical_music_data_3/train_data.json
     batch_size: ${batch_size}
   dataset_valid:
-    path: ../../classical_music_data_1/train_data.json
+    path: ../../classical_music_data_4/train_data.json
     batch_size: ${batch_size}
 
 callbacks:
@@ -77,11 +77,11 @@ loggers:
   wandb:
     _target_: pytorch_lightning.loggers.wandb.WandbLogger
     project: mousai
-    entity: ${oc.env:WANDB_ENTITY}
+    entity: kamalojasv
     # offline: False  # set True to store all logs only locally
     job_type: "train"
     group: ""
-    save_dir: ${scratch_dir}
+    save_dir: ./scratch
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -89,7 +89,7 @@ trainer:
   accelerator: gpu 
   devices: -1
   num_nodes: 16
-  strategy: ddp
+  strategy: ddp_find_unused_parameters_true
   min_epochs: 0
   max_epochs: -1
   enable_model_summary: False

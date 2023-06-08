@@ -4,7 +4,20 @@ from math import pi
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from datasets import load_from_disk, load_dataset
+from datasets import load_from_disk, load_dataset, concatenate_datasets
+
+def filter_fn(example):
+
+    if example["wave"] is None or example["wave"].shape != (2, 2097152):
+        return False
+    
+    if example["info"] is None:
+        return False
+    
+    if example["info"]["title"][0] is None and example["info"]["artist"][0] is None and example["info"]["album"][0] is None and example["info"]["genre"][0] is None and example["info"]["year"][0] is None and example["info"]["crop_id"] is None and example["info"]["num_crops"] is None:
+        return False
+    
+    return True
 
 class Datamodule(pl.LightningDataModule):
     def __init__(
@@ -17,7 +30,13 @@ class Datamodule(pl.LightningDataModule):
         **kwargs: int,
     ) -> None:
         super().__init__()
-        self.dataset_train = load_dataset("json", data_files=[dataset_train_path, dataset_valid_path]).with_format("torch")["train"]
+        data_files = [f"../../classical_music_data_{i}/train_data.json" for i in range(1, 15)]
+        data_files.append(f"../../classical_music_data/train_data.json")
+        self.dataset_train = load_dataset("json", data_files=data_files, num_proc=32).with_format("torch")["train"]
+        data_files = [f"../../classical_music_data_{i}/train_data.json" for i in range(15, 31)]
+        dataset_train_2 = load_dataset("json", data_files=data_files, num_proc=32).with_format("torch")["train"]
+        self.dataset_train = concatenate_datasets([self.dataset_train, dataset_train_2])
+
         self.dataset_train = self.dataset_train.train_test_split(test_size=0.01, seed=42)
         self.dataset_valid = self.dataset_train["test"]
         self.dataset_train = self.dataset_train["train"]
@@ -29,9 +48,7 @@ class Datamodule(pl.LightningDataModule):
             dataset=dataset,            
             num_workers=self.num_workers,
             batch_size=self.batch_size, 
-            shuffle=True,
-            pin_memory=True,
-            prefetch_factor=2,
+            shuffle=False,
         )
 
     def train_dataloader(self) -> DataLoader:

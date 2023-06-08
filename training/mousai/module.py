@@ -81,19 +81,19 @@ class Module(pl.LightningModule):
         batch_size = len(infos['title'][0])
         for i in range(batch_size):
             tags = []
-            if infos['title'][0][i] != None and not (dropout(0.1) and use_dropout):
+            if infos['title'][0][i] != "__None__" and not (dropout(0.1) and use_dropout):
                 tags.append(infos['title'][0][i])
 
-            if infos['genre'][0][i] != None and not (dropout(0.1) and use_dropout):
+            if infos['genre'][0][i] != "__None__" and not (dropout(0.1) and use_dropout):
                 tags.append(infos['genre'][0][i])
 
-            if infos['artist'][0][i] != None and not (dropout(0.1) and use_dropout):
+            if infos['artist'][0][i] != "__None__" and not (dropout(0.1) and use_dropout):
                 tags.append(infos['artist'][0][i])
 
-            if infos['album'][0][i] != None and not (dropout(0.2) and use_dropout):
+            if infos['album'][0][i] != "__None__" and not (dropout(0.2) and use_dropout):
                 tags.append(infos['album'][0][i])
 
-            if infos['year'][0][i] != None and not (dropout(0.2) and use_dropout):
+            if infos['year'][0][i] != "__None__" and not (dropout(0.2) and use_dropout):
                 tags.append(infos['year'][0][i])
 
             if infos['crop_id'][i].item() != None and infos['num_crops'][i].item() != None and not (dropout(0.2) and use_dropout):
@@ -101,6 +101,10 @@ class Module(pl.LightningModule):
 
             random.shuffle(tags)
             text = ' '.join(tags) if random.random() > 0.5 else ', '.join(tags)
+
+            # if text is empty, use "Classical Music"
+            if text == '':
+                text = 'Classical Music'
             texts.append(text)
 
         return texts
@@ -111,18 +115,23 @@ class Module(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         wave, info = batch["wave"], batch["info"]
+        
         latent = self.encode(wave)
+        batch_size=wave.shape[0]
         text = self.get_texts(info) 
         loss = self.model(latent, text=text, embedding_mask_proba=self.embedding_mask_proba)
-        self.log("train_loss", loss, sync_dist=True)
+        self.log("train_loss", loss, sync_dist=True, batch_size=batch_size)
         self.model_ema.update()
-        self.log("ema_decay", self.model_ema.get_current_decay(), sync_dist=True)
+        self.log("ema_decay", self.model_ema.get_current_decay(), sync_dist=True, batch_size=batch_size)
         return loss
 
     def validation_step(self, batch, batch_idx):
+        
         wave, info = batch["wave"], batch["info"]
+        
+        batch_size=wave.shape[0]
         latent = self.encode(wave)
         text = self.get_texts(info) 
         loss = self.model(latent, text=text)
-        self.log("valid_loss", loss, sync_dist=True)
+        self.log("valid_loss", loss, sync_dist=True, batch_size=batch_size)
         return loss
