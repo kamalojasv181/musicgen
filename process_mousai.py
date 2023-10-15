@@ -109,6 +109,6 @@ if __name__ == '__main__':
             if not check(datapoint_new):
                 continue
             
-            with open(f"{data_folder}/train_data.json", "a") as f:
+            with open(f"{data_folder}/data.json", "a") as f:
                 f.write(json.dumps(datapoint_new))
                 f.write("\n")

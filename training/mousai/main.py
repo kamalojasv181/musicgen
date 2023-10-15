@@ -47,10 +47,12 @@ if __name__ == "__main__":
     )
 
     datamodule = Datamodule(
-        dataset_train_path=config.datamodule.dataset_train.path,
-        dataset_valid_path=config.datamodule.dataset_valid.path,
+        train_files=config.datamodule.dataset_train.files,
+        valid_files=config.datamodule.dataset_valid.files,
+        test_files=config.datamodule.dataset_test.files,
         batch_size=config.datamodule.dataset_train.batch_size,
         num_workers=config.datamodule.num_workers,
+        num_proc=config.datamodule.num_proc,
     )
 
 

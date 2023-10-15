@@ -4,13 +4,14 @@
 scratch_dir: ./scratch
 #device: [0]
 num_workers: 12
+num_proc: 12
 batch_size: 8
 
 sampling_rate: 48000
 length: 2097152
 channels: 2
-log_every_n_steps: 1000
-ckpt_every_n_steps: 5000
+log_every_n_steps: 1
+ckpt_every_n_steps: 5
 
 module:
   _target_: module.Module
@@ -42,11 +43,15 @@ module:
 
 datamodule:
   num_workers: ${num_workers}
+  num_proc: ${num_proc}
   dataset_train:
-    path: ../../classical_music_data_3/train_data.json
+    files: [../../data/train/data.json] 
     batch_size: ${batch_size}
   dataset_valid:
-    path: ../../classical_music_data_4/train_data.json
+    files: [../../data/validation/data.json]
+    batch_size: ${batch_size}
+  dataset_test:
+    files: [../../data/test/data.json]
     batch_size: ${batch_size}
 
 callbacks:
@@ -86,7 +91,7 @@ loggers:
 trainer:
   _target_: pytorch_lightning.Trainer
   precision: 32 # Precision used for tensors, default `32`
-  accelerator: gpu 
+  accelerator: cpu # Type of accelerator to use (CPU, GPU, TPU, None)
   devices: -1
   num_nodes: 16
   strategy: ddp_find_unused_parameters_true
@@ -97,4 +102,3 @@ trainer:
   limit_val_batches: 10 
   check_val_every_n_epoch: null
   val_check_interval: ${log_every_n_steps}
-  # default_root_dir: s3://s-harmonai/flavio/ckpts/${now:%Y-%m-%d-%H-%M-%S}/

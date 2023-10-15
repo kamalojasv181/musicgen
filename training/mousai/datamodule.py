@@ -22,24 +22,23 @@ def filter_fn(example):
 class Datamodule(pl.LightningDataModule):
     def __init__(
         self,
-        dataset_train_path: str,
-        dataset_valid_path: str,
+        train_files: list,
+        valid_files: list,
+        test_files: list,
         batch_size: int,
         *,
         num_workers: int,
+        num_proc: int = 16,
         **kwargs: int,
     ) -> None:
         super().__init__()
-        data_files = [f"../../classical_music_data_{i}/train_data.json" for i in range(1, 15)]
-        data_files.append(f"../../classical_music_data/train_data.json")
-        self.dataset_train = load_dataset("json", data_files=data_files, num_proc=32).with_format("torch")["train"]
-        data_files = [f"../../classical_music_data_{i}/train_data.json" for i in range(15, 31)]
-        dataset_train_2 = load_dataset("json", data_files=data_files, num_proc=32).with_format("torch")["train"]
-        self.dataset_train = concatenate_datasets([self.dataset_train, dataset_train_2])
 
-        self.dataset_train = self.dataset_train.train_test_split(test_size=0.01, seed=42)
-        self.dataset_valid = self.dataset_train["test"]
-        self.dataset_train = self.dataset_train["train"]
+        self.dataset_train = load_dataset("json", data_files=train_files, num_proc=num_proc).with_format("torch")["train"]
+
+        self.dataset_valid = load_dataset("json", data_files=valid_files, num_proc=num_proc).with_format("torch")["train"]
+
+        self.dataset_test = load_dataset("json", data_files=test_files, num_proc=num_proc).with_format("torch")["train"]
+
         self.num_workers = num_workers
         self.batch_size = batch_size
 
@@ -56,3 +55,6 @@ class Datamodule(pl.LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         return self.get_dataloader(self.dataset_valid)
+    
+    def test_dataloader(self) -> DataLoader:
+        return self.get_dataloader(self.dataset_test)

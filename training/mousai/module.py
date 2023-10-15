@@ -102,9 +102,6 @@ class Module(pl.LightningModule):
             random.shuffle(tags)
             text = ' '.join(tags) if random.random() > 0.5 else ', '.join(tags)
 
-            # if text is empty, use "Classical Music"
-            if text == '':
-                text = 'Classical Music'
             texts.append(text)
 
         return texts
