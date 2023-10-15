@@ -70,3 +70,4 @@ training/mousai/run_4.sh
 training/mousai/run_4_test.sh
 training/music-lm/soundstream_results/
 training/musika/checkpoints/
+training/musika/logs/
