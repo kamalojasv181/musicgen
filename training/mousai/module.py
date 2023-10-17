@@ -1,28 +1,21 @@
 import random
-import warnings
-from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union, Type, Tuple 
+from typing import Any, Dict, List, Optional, Tuple 
 from math import pi 
-
-import json 
-import plotly.graph_objs as go
 import pytorch_lightning as pl
+from pytorch_lightning.utilities.types import STEP_OUTPUT
 import torch
-import torchaudio
-import wandb
-import torch.nn.functional as F 
-from einops import rearrange, repeat
 from ema_pytorch import EMA
-from pytorch_lightning import Callback, Trainer
-from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.utilities import rank_zero_only
-from torch import Tensor, nn, optim
-from torch.utils.data import DataLoader
-from tqdm import tqdm 
-
-from archisound import ArchiSound
+from torch import Tensor, nn
 from transformers import AutoModel 
 import os
+import numpy as np
+import json
+from frechet_audio_distance import FrechetAudioDistance
+import laion_clap
+import sys
+sys.path.append("../../")
+
+from utils import save_wav, load_json
 
 
 torch.set_float32_matmul_precision('high')
@@ -46,7 +39,8 @@ class Module(pl.LightningModule):
         ema_power: float,
         model: nn.Module,
         embedding_mask_proba: float,
-        autoencoder_name: str 
+        autoencoder_name: str,
+        validation_path: str, 
     ):
         super().__init__()
         self.lr = lr
@@ -60,6 +54,17 @@ class Module(pl.LightningModule):
         self.autoencoder = AutoModel.from_pretrained(
             f"archinetai/{autoencoder_name}", trust_remote_code=True, use_auth_token=os.environ["HUGGINGFACE_TOKEN"]
         )
+
+        self.validation_path = validation_path
+        self.frechet = FrechetAudioDistance(
+            model_name="pann",
+            use_pca=False,
+            use_activation=False,
+            verbose=False
+        )
+
+        self.clap_model = laion_clap.CLAP_Module(enable_fusion=False, amodel= 'HTSAT-base')
+        self.clap_model.load_ckpt("../../../music_audioset_epoch_15_esc_90.14.pt")
 
     @property
     def device(self):
@@ -131,4 +136,115 @@ class Module(pl.LightningModule):
         text = self.get_texts(info) 
         loss = self.model(latent, text=text)
         self.log("valid_loss", loss, sync_dist=True, batch_size=batch_size)
+
+        samples, info = self.generate_samples(text=text)
+
+        self.save_samples(samples, info, batch_idx)
+
         return loss
+    
+    def on_validation_epoch_end(self) -> None:
+        # log the fad score and clap score
+        fad_score = self.fad(
+            background_dir=os.path.join(self.validation_path, "true"),
+            eval_dir=os.path.join(self.validation_path, "generated")
+        )
+
+        self.log("fad_score", fad_score, sync_dist=True)
+
+        # load the json file prompt_to_path.json
+        prompt_to_path = load_json(os.path.join(self.validation_path, "prompt_to_path.json"))
+
+        # compute the clap score
+        clap_score = self.clap(prompt_to_path)
+
+        self.log("clap_score", clap_score, sync_dist=True)
+
+    @torch.no_grad()
+    def generate_samples(
+            self, 
+            text: List[str],
+            latent_channels: int = 32,
+            sampling_steps: int = 100, 
+            decoding_steps: int = 100, 
+            cfg_scale: int = 5.0, 
+            seed: int = 42, 
+            length: int = 2048, 
+            device: torch.device = None,
+            show_progress: bool = True, 
+            with_info: bool = True
+        ) -> Tuple[Tensor, Dict]:
+        
+        device = self.device
+        generator = torch.Generator(device=device)
+        noise_shape = (len(text), latent_channels, length)
+        noise = torch.randn(noise_shape, device=device, generator=generator)
+
+        latent = self.model.sample(
+            noise, 
+            num_steps=sampling_steps,
+            text=text,
+            embedding_scale=cfg_scale,
+            show_progress=show_progress,
+        )
+        samples = self.autoencoder.decode(
+            latent, 
+            num_steps=decoding_steps, 
+            generator=generator,
+            show_progress=show_progress,
+        )
+
+        info = dict(
+            text=text, 
+            sampling_steps=sampling_steps,
+            decoding_steps=decoding_steps,
+            cfg_scale=cfg_scale,
+            seed=seed, 
+            length=length, 
+            latent=latent,
+        )
+
+        return samples, info
+    
+    def save_samples(self, samples: Tensor, info: Dict, batch_idx: int):
+        for i, (sample, prompt) in enumerate(zip(samples, info["text"])):
+            sample_cpu = sample.cpu().numpy()
+            sample_cpu = np.transpose(sample_cpu)
+            sample_cpu = sample_cpu / np.max(np.abs(sample_cpu))
+
+            # save in the self.validation_path/generated folder by the name batch_idx_prompt_idx.wav
+            save_wav(sample_cpu, os.path.join(self.validation_path, "generated", f"{batch_idx}_{i}.wav"), sr=48000)
+
+            # load the json file prompt_to_path.json
+            prompt_to_path = load_json(os.path.join(self.validation_path, "prompt_to_path.json"))
+
+            # add the prompt and the path to the json file
+            prompt_to_path[prompt] = os.path.join(self.validation_path, "generated", f"{batch_idx}_{i}.wav")
+
+            # save the json file
+            with open(os.path.join(self.validation_path, "prompt_to_path.json"), "w") as f:
+                f.write(json.dumps(prompt_to_path))
+
+
+    def fad(self, background_dir: str, eval_dir: str) -> float:
+        fad_score = self.frechet.score(
+            background_dir=background_dir,
+            eval_dir=eval_dir
+        )
+
+        return fad_score
+    
+    def clap(self, audio_text_pairs: Dict) -> float:
+        
+        texts = list(audio_text_pairs.keys())
+        audio_paths = list(audio_text_pairs.values())
+
+        audio_embeds = self.clap_model.get_audio_embedding_from_filelist(x = audio_paths, use_tensor=True)
+        text_embeds = self.clap_model.get_text_embedding(texts, use_tensor=True)
+
+        dot_product = torch.matmul(audio_embeds, text_embeds.T)
+        cosine_similarity = dot_product / (torch.norm(audio_embeds, dim=1) * torch.norm(text_embeds, dim=1))
+
+        avg_cosine_similarity = torch.mean(cosine_similarity)
+
+        return avg_cosine_similarity.item()

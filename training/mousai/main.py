@@ -8,11 +8,34 @@ from pytorch_lightning.callbacks import RichProgressBar, ModelCheckpoint, RichMo
 from logger import SampleLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning import Trainer
-
-
+import os
+import shutil
+import glob
 
 if __name__ == "__main__":
     config = OmegaConf.load("config.yaml")
+
+    if not os.path.exists(config.validation.path):
+        os.makedirs(config.validation.path)
+
+        # make a folder called true
+        os.makedirs(os.path.join(config.validation.path, "true"))
+
+        # make a folder called generated
+        os.makedirs(os.path.join(config.validation.path, "generated"))
+
+        # also create an empty json file called prompt to path
+        with open(os.path.join(config.validation.path, "prompt_to_path.json"), "w") as f:
+            f.write("{}")
+
+        for validation_folder in config.datamodule.dataset_valid.folders:
+            # copy the audio files to the true folder
+            # get the names of all mp3 files in the folder
+            audio_files = glob.glob(os.path.join(validation_folder, "*.mp3"))
+
+            for audio_file in audio_files:
+                shutil.copy(audio_file, os.path.join(config.validation.path, "true"))
+
 
     model = DiffusionModel(
         net_t=UNetV0, # The model type used for diffusion (U-Net V0 in this case)
@@ -44,12 +67,13 @@ if __name__ == "__main__":
         model=model,
         embedding_mask_proba=config.module.embedding_mask_proba,
         autoencoder_name=config.module.autoencoder_name,
+        validation_path=config.validation.path,
     )
 
     datamodule = Datamodule(
-        train_files=config.datamodule.dataset_train.files,
-        valid_files=config.datamodule.dataset_valid.files,
-        test_files=config.datamodule.dataset_test.files,
+        train_folders=config.datamodule.dataset_train.folders,
+        valid_folders=config.datamodule.dataset_valid.folders,
+        test_folders=config.datamodule.dataset_test.folders,
         batch_size=config.datamodule.dataset_train.batch_size,
         num_workers=config.datamodule.num_workers,
         num_proc=config.datamodule.num_proc,

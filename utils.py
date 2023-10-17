@@ -41,7 +41,7 @@ class Config:
         for key, value in args.items():
             if type(value) == dict:
                 args[key] = Config(**value)
-        self.__dict__.update(args)\
+        self.__dict__.update(args)
 
 def load_pickle(path):
 

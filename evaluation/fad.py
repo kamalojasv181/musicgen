@@ -14,7 +14,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     frechet = FrechetAudioDistance(
-        model_name="vggish",
+        model_name="pann",
         use_pca=False, 
         use_activation=False,
         verbose=False
@@ -26,3 +26,4 @@ if __name__ == "__main__":
     )
 
     print(fad_score)
+    print(type(fad_score))
