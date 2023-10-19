@@ -13,6 +13,7 @@ import json
 from frechet_audio_distance import FrechetAudioDistance
 import laion_clap
 import sys
+import shutil
 sys.path.append("../../")
 
 from utils import save_wav, load_json
@@ -159,6 +160,16 @@ class Module(pl.LightningModule):
         clap_score = self.clap(prompt_to_path)
 
         self.log("clap_score", clap_score, sync_dist=True)
+
+        # now reset the prompt_to_path.json file
+        with open(os.path.join(self.validation_path, "prompt_to_path.json"), "w") as f:
+            f.write(json.dumps({}))
+
+        # now delete the generated folder
+        shutil.rmtree(os.path.join(self.validation_path, "generated"))
+
+        # now create the generated folder again
+        os.mkdir(os.path.join(self.validation_path, "generated"))
 
     @torch.no_grad()
     def generate_samples(
