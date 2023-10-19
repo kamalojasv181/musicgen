@@ -91,6 +91,8 @@ First of all, encode audio files to training samples (in the form of compressed 
 python musika_encode.py --files_path folder_of_audio_files --save_path folder_of_encodings
 ```
 
+use `--load_path` to specify a pretrained model and continue training from it.
+
 `folder_of_encodings` will be automatically created if it does not exist.
 
 *musika* encodes audio samples to chunks of sequences of latent vectors of equal length (`--max_lat_len`) which by default are double the size of the chunks used during training. During training chunks are randomly cropped as a data augmentation technique. Keep in mind that by default audio samples are required to be at least 47 s long (`--max_lat_len 512`): if you require to encode shorter samples specify a lower value (the minimum is 256, corresponding to about 23 s, which is the length of samples used for training) both during encoding and during training.
