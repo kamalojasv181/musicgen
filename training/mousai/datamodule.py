@@ -22,9 +22,9 @@ def filter_fn(example):
 class Datamodule(pl.LightningDataModule):
     def __init__(
         self,
-        train_files: list,
-        valid_files: list,
-        test_files: list,
+        train_folders: list,
+        valid_folders: list,
+        test_folders: list,
         batch_size: int,
         *,
         num_workers: int,
@@ -32,6 +32,10 @@ class Datamodule(pl.LightningDataModule):
         **kwargs: int,
     ) -> None:
         super().__init__()
+
+        train_files = [folder + "/data.json" for folder in train_folders]
+        valid_files = [folder + "/data.json" for folder in valid_folders]
+        test_files = [folder + "/data.json" for folder in test_folders]
 
         self.dataset_train = load_dataset("json", data_files=train_files, num_proc=num_proc).with_format("torch")["train"]
 

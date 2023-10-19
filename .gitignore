@@ -71,3 +71,4 @@ training/mousai/run_4_test.sh
 training/music-lm/soundstream_results/
 training/musika/checkpoints/
 training/musika/logs/
+training/mousai/validation_dir/
