@@ -66,49 +66,55 @@ if __name__ == '__main__':
 
     for audio_file in tqdm(audio_files):
 
-        metadata = get_metadata(audio_file)
-
-        # get the audio as dual channel
-        audio, sr = librosa.load(audio_file, sr=48000, mono=False)
-        
-        # find the length of the audio in number of samples
         try:
-            audio_len = audio.shape[1]
-        except:
-            continue
 
-        if audio_len < 2097152:
-            continue
+            metadata = get_metadata(audio_file)
 
-        # get 4 random chunks of 2097152 samples each
-        starts = []
-
-        for i in range(4):
-            starts.append(random.randint(0, audio_len - 2097152))
-
-        # sort the starts
-
-        starts.sort()
-
-        # get the chunks
-
-        for i in range(4):
-            audio_chunk = audio[:, starts[i]:starts[i] + 2097152]
-
-            # convert chunk to list
-            audio_chunk = audio_chunk.tolist()
-
-            datapoint_new = {
-                "wave": audio_chunk,
-                "info": metadata,
-            }
-
-            datapoint_new["info"]["crop_id"] = i
-            datapoint_new["info"]["num_crops"] = 4
-
-            if not check(datapoint_new):
-                continue
+            # get the audio as dual channel
+            audio, sr = librosa.load(audio_file, sr=48000, mono=False)
             
-            with open(f"{data_folder}/data.json", "a") as f:
-                f.write(json.dumps(datapoint_new))
-                f.write("\n")
+            # find the length of the audio in number of samples
+            try:
+                audio_len = audio.shape[1]
+            except:
+                continue
+
+            if audio_len < 2097152:
+                continue
+
+            # get 4 random chunks of 2097152 samples each
+            starts = []
+
+            for i in range(4):
+                starts.append(random.randint(0, audio_len - 2097152))
+
+            # sort the starts
+
+            starts.sort()
+
+            # get the chunks
+
+            for i in range(4):
+                audio_chunk = audio[:, starts[i]:starts[i] + 2097152]
+
+                # convert chunk to list
+                audio_chunk = audio_chunk.tolist()
+
+                datapoint_new = {
+                    "wave": audio_chunk,
+                    "info": metadata,
+                }
+
+                datapoint_new["info"]["crop_id"] = i
+                datapoint_new["info"]["num_crops"] = 4
+
+                if not check(datapoint_new):
+                    continue
+                
+                with open(f"{data_folder}/data.json", "a") as f:
+                    f.write(json.dumps(datapoint_new))
+                    f.write("\n")
+
+        except:
+            print("SKIPPED")
+            pass
