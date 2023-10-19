@@ -9,6 +9,7 @@ import subprocess
 from utils import Utils_functions
 from models import Models_functions
 from losses import *
+import wandb
 
 
 class Train_functions:
@@ -136,23 +137,9 @@ class Train_functions:
         exp_path = f"{self.args.save_path}/MUSIKA_latlen_{self.args.latlen}_latdepth_{self.args.latdepth}_sr_{self.args.sr}_time_{current_time}"
         os.makedirs(exp_path, exist_ok=True)
 
-        print("--------------------------------")
-        print("--------------------------------")
-        print("--------------------------------")
-        print("--------------------------------")
-        print("--------------------------------")
 
-        _ = subprocess.Popen(
-            [
-                "tensorboard",
-                "--logdir",
-                f"{self.args.log_path}/MUSIKA_latlen_{self.args.latlen}_latdepth_{self.args.latdepth}_sr_{self.args.sr}",
-                "--port",
-                "6006",
-            ]
-        )
-        print("CLICK ON LINK BELOW TO OPEN TENSORBOARD INTERFACE")
-        print("http://localhost:6006/")
+        wandb.init(project="mousai", name = "musika_training", entity = os.environ["WANDB_ENTITY"], dir = exp_path, job_type = "training")
+        
         print("--------------------------------")
         print("--------------------------------")
         print("--------------------------------")
@@ -194,13 +181,7 @@ class Train_functions:
 
                 dloss_tr, dloss_tf, dloss_id, gloss_t = train_tot(a, ema, models_ls=models_ls)
 
-                with train_summary_writer.as_default():
-                    tf.summary.scalar("disc_loss_r", dloss_tr, step=m)
-                    tf.summary.scalar("disc_loss_f", dloss_tf, step=m)
-                    tf.summary.scalar("gen_loss", gloss_t, step=m)
-                    tf.summary.scalar("gradient_penalty", dloss_id, step=m)
-                    tf.summary.scalar("gp_weight", -switch.value() * self.args.gp_max_weight, step=m)
-                    tf.summary.scalar("lr", self.args.lr, step=m)
+                wandb.log({"disc_loss_r": dloss_tr, "disc_loss_f": dloss_tf, "gen_loss": gloss_t, "gradient_penalty": dloss_id, "gp_weight": -switch.value() * self.args.gp_max_weight, "lr": self.args.lr})
 
                 dtr_list.append(dloss_tr)
                 dtf_list.append(dloss_tf)
