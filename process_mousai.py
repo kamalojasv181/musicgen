@@ -1,7 +1,7 @@
 import os
 import glob
 import mutagen
-import librosa
+from pydub import AudioSegment
 import random
 import argparse
 import pandas as pd
@@ -25,20 +25,12 @@ def get_metadata(audio_file):
 
     return metadata
 
-def check(datapoint):
+def check(datapoint, wave):
 
-    # # filter out the points in train such that wave is not none and shape of wave is (2, 2097152). Also, remove the points where "info" is None or all of info["title"][0] = None, info["artist"][0] = None, info["album"][0] = None, info["genre"][0] = None, info["year"][0] = None, info["crop_id"] = None and info["num_crops"] = None
-
-    if datapoint["wave"] is None:
+    if wave is None:
         return False
     
     if datapoint["info"] is None:
-        return False
-    
-    if len(datapoint["wave"]) != 2:
-        return False
-    
-    if len(datapoint["wave"][0]) != 2097152 and len(datapoint["wave"][1]) != 2097152:
         return False
     
     if datapoint["info"]["title"][0] is None and datapoint["info"]["artist"][0] is None and datapoint["info"]["album"][0] is None and datapoint["info"]["genre"][0] is None and datapoint["info"]["year"][0] is None and datapoint["info"]["crop_id"] is None and datapoint["info"]["num_crops"] is None:
@@ -56,65 +48,64 @@ if __name__ == '__main__':
 
     # add arguments to the parser
 
-    parser.add_argument("--data_folder", type=str, help="Path to the folder containing the audio files")
+    parser.add_argument("--data_folder", type=str, help="Path to the folder containing the audio files", default="../data/sample_dataset")
+    parser.add_argument("--output_folder", type=str, help="Path to the folder where the processed dataset will be stored", default="../data/processed_dataset")
 
     args = parser.parse_args()
+
+    # create the output folder if it does not exist
+    if not os.path.exists(args.output_folder):
+        os.makedirs(args.output_folder)
 
     data_folder = args.data_folder
 
     audio_files = glob.glob(os.path.join(data_folder, "*.mp3"))
 
-    for audio_file in tqdm(audio_files):
+    for idx, audio_file in tqdm(enumerate(audio_files)):
 
-        try:
+        metadata = get_metadata(audio_file)
 
-            metadata = get_metadata(audio_file)
+        # get the audio as dual channel
+        audio = AudioSegment.from_mp3(audio_file)
 
-            # get the audio as dual channel
-            audio, sr = librosa.load(audio_file, sr=48000, mono=False)
+        if audio.channels != 2:
+            continue
+        
+        # find the length of the audio in milliseconds
+        audio_len = len(audio)
+
+        if audio_len < 44000:
+            continue
+
+        # get 4 random chunks of 44000 samples each
+        starts = []
+
+        for i in range(4):
+            starts.append(random.randint(0, audio_len - 44000))
+
+        # sort the starts
+
+        starts.sort()
+
+        # get the chunks
+
+        for i in range(4):
+            audio_chunk = audio[starts[i]:starts[i] + 44000]
+
+            datapoint_new = {
+                "path": f"{args.output_folder}/{audio_file.split('/')[-1][:-4]}_{i}.mp3",
+                "info": metadata,
+            }
+
+            datapoint_new["info"]["crop_id"] = i
+            datapoint_new["info"]["num_crops"] = 4
+
+            if not check(datapoint_new, audio_chunk):
+                continue
+
+            # save the audio
+            audio_chunk.export(f"{args.output_folder}/{audio_file.split('/')[-1][:-4]}_{i}.mp3", format="mp3")
             
-            # find the length of the audio in number of samples
-            try:
-                audio_len = audio.shape[1]
-            except:
-                continue
-
-            if audio_len < 2097152:
-                continue
-
-            # get 4 random chunks of 2097152 samples each
-            starts = []
-
-            for i in range(4):
-                starts.append(random.randint(0, audio_len - 2097152))
-
-            # sort the starts
-
-            starts.sort()
-
-            # get the chunks
-
-            for i in range(4):
-                audio_chunk = audio[:, starts[i]:starts[i] + 2097152]
-
-                # convert chunk to list
-                audio_chunk = audio_chunk.tolist()
-
-                datapoint_new = {
-                    "wave": audio_chunk,
-                    "info": metadata,
-                }
-
-                datapoint_new["info"]["crop_id"] = i
-                datapoint_new["info"]["num_crops"] = 4
-
-                if not check(datapoint_new):
-                    continue
-                
-                with open(f"{data_folder}/data.json", "a") as f:
-                    f.write(json.dumps(datapoint_new))
-                    f.write("\n")
-
-        except:
-            print("SKIPPED")
-            pass
+            with open(f"{args.output_folder}/data.json", "a") as f:
+                f.write(json.dumps(datapoint_new))
+                f.write("\n")

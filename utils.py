@@ -1,5 +1,7 @@
 import json
 import os
+import numpy as np
+from pydub import AudioSegment
 
 def save_json(data, path):
 
@@ -115,3 +117,39 @@ def load_jsonl(path):
     with open(path, "r") as f:
         data = [json.loads(line) for line in f]
     return data
+
+
+def save_stereo_audio(channels, output_path, sample_rate=48000):
+    if len(channels) != 2:
+        raise ValueError("The 'channels' argument must be a list containing two sublists, one for the left channel and one for the right channel.")
+    
+    left_channel_data = channels[0]
+    right_channel_data = channels[1]
+
+    # Convert input lists to numpy arrays
+    left_audio_array = np.array(left_channel_data)
+    right_audio_array = np.array(right_channel_data)
+
+    # Assuming your audio samples are in 16-bit PCM format (adjust as needed)
+    sample_width = 2  # 16 bits = 2 bytes
+    channels = 2  # Stereo audio
+
+    # Convert numpy arrays to AudioSegments
+    left_audio = AudioSegment(
+        left_audio_array.tobytes(), 
+        frame_rate=sample_rate, 
+        sample_width=sample_width, 
+        channels=1
+    )
+    right_audio = AudioSegment(
+        right_audio_array.tobytes(), 
+        frame_rate=sample_rate, 
+        sample_width=sample_width, 
+        channels=1
+    )
+
+    # Combine left and right channels into a stereo audio segment
+    stereo_audio = AudioSegment.from_mono_audiosegments(left_audio, right_audio)
+
+    # Export the stereo audio as an MP3 file
+    stereo_audio.export(output_path, format="mp3")
