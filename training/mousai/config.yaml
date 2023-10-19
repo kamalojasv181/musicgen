@@ -102,6 +102,7 @@ trainer:
   limit_val_batches: 10 
   check_val_every_n_epoch: null
   val_check_interval: ${log_every_n_steps}
+  ckpt_path: null
   
 
 validation:

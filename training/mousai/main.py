@@ -122,6 +122,7 @@ if __name__ == "__main__":
         limit_val_batches=config.trainer.limit_val_batches,
         check_val_every_n_epoch=config.trainer.check_val_every_n_epoch,
         val_check_interval=config.trainer.val_check_interval,
+        ckpt_path=config.trainer.ckpt_path,
     )
 
     trainer.fit(module, datamodule=datamodule)
