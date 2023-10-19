@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--data_folder", type=str, help="Path to the folder containing the audio files", default="../data/sample_dataset")
     parser.add_argument("--output_folder", type=str, help="Path to the folder where the processed dataset will be stored", default="../data/processed_dataset")
-
+    parser.add_argument("--continue_index", type=int, help="If we want to continue from an index", default=0)
     args = parser.parse_args()
 
     # create the output folder if it does not exist
@@ -62,6 +62,9 @@ if __name__ == '__main__':
     audio_files = glob.glob(os.path.join(data_folder, "*.mp3"))
 
     for idx, audio_file in tqdm(enumerate(audio_files)):
+
+        if idx < args.continue_index:
+            continue
 
         metadata = get_metadata(audio_file)
 
