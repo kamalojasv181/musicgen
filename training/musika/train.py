@@ -1,16 +1,14 @@
 import tensorflow as tf
-import tensorboard
 import numpy as np
 from tqdm import tqdm
 import time
 import datetime
 import os
-import subprocess
 from utils import Utils_functions
 from models import Models_functions
 from losses import *
 import wandb
-
+from frechet_audio_distance import FrechetAudioDistance
 
 class Train_functions:
     def __init__(self, args):
@@ -18,6 +16,13 @@ class Train_functions:
         self.args = args
         self.U = Utils_functions(args)
         self.M = Models_functions(args)
+        self.frechet = FrechetAudioDistance(
+            model_name="pann",
+            use_pca=False,
+            use_activation=False,
+            verbose=False
+        )
+
 
     def gradient_penalty(self, x, net):
         x_hat = x
@@ -120,6 +125,14 @@ class Train_functions:
         opt_dec.learning_rate = lr
         opt_disc.learning_rate = lr * 1.0
 
+    def fad(self, background_dir: str, eval_dir: str) -> float:
+            fad_score = self.frechet.score(
+                background_dir=background_dir,
+                eval_dir=eval_dir
+            )
+
+            return fad_score
+
     def train(self, ds, models_ls=None):
 
         @tf.function(jit_compile=self.args.xla)
@@ -132,7 +145,6 @@ class Train_functions:
             + current_time
             + "/train"
         )
-        train_summary_writer = tf.summary.create_file_writer(train_log_dir)
 
         exp_path = f"{self.args.save_path}/MUSIKA_latlen_{self.args.latlen}_latdepth_{self.args.latdepth}_sr_{self.args.sr}_time_{current_time}"
         os.makedirs(exp_path, exist_ok=True)
@@ -222,3 +234,21 @@ class Train_functions:
 
             c = 0
             g = 0
+
+            # # generate 800 samples in the model's output directory using the last saved checkpoint
+            # self.U.generate(
+            #     models_ls=models_ls,
+            #     save_path=exp_path + "/generated",
+            #     num_samples=8
+            # )
+
+            # # true samples are stored in ../../../data/validation/
+            # # generated samples are stored in exp_path + "/generated"
+            # # compute the FAD score
+            # fad_score = self.fad(
+            #     background_dir="../../../data/validation/",
+            #     eval_dir=exp_path + "/generated"
+            # )
+
+            # # log the FAD score
+            # wandb.log({"fad_score": fad_score})

@@ -548,18 +548,24 @@ class Utils_functions:
 
         return tf.concat(rls[:fac], 0)
 
-    def generate(self, models_ls):
+    def generate(self, models_ls, num_samples=None, save_path=None):
         critic, gen, enc, dec, enc2, dec2, gen_ema, [opt_dec, opt_disc], switch = models_ls
-        os.makedirs(self.args.save_path, exist_ok=True)
+        if num_samples is None:
+            num_samples = self.args.num_samples
+
+        if save_path is None:
+            save_path = self.args.save_path
+
+        os.makedirs(save_path, exist_ok=True)
         fac = (self.args.seconds // 23) + 1
-        print(f"Generating {self.args.num_samples} samples...")
-        for i in tqdm(range(self.args.num_samples)):
+        print(f"Generating {num_samples} samples...")
+        for i in tqdm(range(num_samples)):
             wv = self.generate_waveform(
-                self.get_noise_interp_multi(fac, self.args.truncation), gen_ema, dec, dec2, batch_size=64
+                self.get_noise_interp_multi(fac), gen_ema, dec, dec2, batch_size=64
             )
             dt = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             write_wav(
-                f"{self.args.save_path}/{i}_{dt}.wav", self.args.sr, np.squeeze(wv)[: self.args.seconds * self.args.sr]
+                f"{save_path}/{i}_{dt}.wav", self.args.sr, np.squeeze(wv)[: self.args.seconds * self.args.sr]
             )
 
     def decode_path(self, models_ls):

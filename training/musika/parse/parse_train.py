@@ -206,6 +206,13 @@ def params_args(args):
         help="True if you wish to create a public URL for the Gradio interface",
     )
 
+    parser.add_argument(
+        "--seconds",
+        type=int,
+        default=43,
+        help="Number of seconds to generate",
+    )
+
     tmp_args = parser.parse_args()
 
     args.hop = tmp_args.hop
@@ -237,6 +244,7 @@ def params_args(args):
     args.mixed_precision = tmp_args.mixed_precision
     args.xla = tmp_args.xla
     args.share_gradio = tmp_args.share_gradio
+    args.seconds = tmp_args.seconds
 
     if args.small:
         args.latlen = 128

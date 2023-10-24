@@ -73,3 +73,4 @@ training/musika/checkpoints/
 training/musika/logs/
 training/mousai/validation_dir/
 slurm*
+training/musika/.vscode/launch.json
